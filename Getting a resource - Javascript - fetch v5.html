@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!doctype html>
+	<html lang="es">
+	<meta charset="UTF-8">
+		<title>Prueba con Ajax</title>
+<style>
+
+body{background-color:black; color:green;}
+header h1{text-align:center;}
+.header-menu h1{text-align:center}
+.header-menu {justify-content: flex-end;height: 60px; font-size:20px;}
+.header-menu ul li {display: inline-block; padding: 0 10px; list-style: none;}
+aside {height:1080px;float:left; flex: 0.4; padding:0px 20px 0px 0px;border-left: 1px solid #fff;}
+a:visited {color: blue;}
+aside ul {list-style: none;}
+a:hover{background-color:green;}
+#menu_lateral a{text-decoration-line:none; font-weight:bold;}
+section, #desContr, #data_table{color:white}
+footer{clear:both; text-align:center; font:Verdana,Geneva,sans-serif}
+.address{color: blue; display: none;}
+.company{color: blue; display: none;}
+#mapa{height:300px; width:300px;}
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://maps.google.com/maps/api/js?key=#API_KEY#"></script> 
+<script type="text/javascript" src="jquery.gomap-1.3.3.min.js"></script> 
+
+<script>
+window.onload=function() {
+	
+
+var idSelected;
+div1 = document.getElementById("div1")
+uKeyList = document.getElementById('check_holder')
+data_table = document.getElementById('data_table')
+var sub_key = false
+var pasador
+const mapa = document.getElementById("mapa")
+const contenedor = document.getElementById("contenedor")
+const uProps = document.getElementById('uProps');
+var key;
+
+	
+document.querySelectorAll("a").forEach(element=> element.onclick= function(event){event.preventDefault();			//forEach link, desactiva propiedad por defecto	
+	if (uKeyList.hasChildNodes()||data_table.hasChildNodes()){removeAllChildNodes(uKeyList, data_table)}//llama a funcion para eliminar li y tablas
+	let url=event.target; 							//define el target de los links
+	fetch(url)								// funcion fetch()
+	.then(response=> response.json())
+	.then(data=> {
+	objJson = data;
+	let objJson_string = JSON.stringify(data); 			//convierte el objeto Json en string
+	document.getElementById("contenedor").innerHTML = objJson_string; //muestra en pantalla el objeto Json string
+	userFilter(data);})					//llama al filtro por usuarios y le pasa parametro
+
+								}//cierre funcion anonima onclick
+			)// cierre forEach Link						
+		}// cierre onload function
+		
+function userFilter(data){  //inserta el input range para seleccionar el usuario
+	let maximo = data.length-1; //establece el maximo de elementos del array ajustado por posicion inicial=0
+	document.getElementById("table_title").innerHTML ="<b>Select User:</b>";//titulo del range selector
+	document.getElementById('selector').innerHTML = "1";
+	document.getElementById("range_holder").innerHTML ="<input type='range' onchange='userRange(this.value)' value='0' min='0' max="+maximo+">";
+	document.getElementById('min').innerHTML ="1";
+	document.getElementById('max').innerHTML =maximo+1;}
+	
+
+function userRange(rangeValue){ 	//llamado desde el evento onchange del input range con el valor seleccionado de atributo
+	if (uKeyList.hasChildNodes()||data_table.hasChildNodes()){  
+		removeAllChildNodes(uKeyList, data_table)}			//llama a funcion para eliminar li y tablas
+
+	var json;
+	var lista;	
+	contenedor.innerHTML="";
+
+	llaves: for (const KEY in objJson[rangeValue]){
+		json = objJson[rangeValue][KEY]; 
+		 if (typeof json != 'object'){
+			let texto = `${KEY} : ${json}`,
+			   li_Id = `KEY_${KEY}`,
+			   li_Class = "liObject",
+			   padre = document.getElementById('uProps');
+			   const LiObject1 = new CrearLi(li_Id, li_Class, padre, texto);
+			   LiObject1.new_li(); 
+			continue llaves;}
+		else{ 
+			let li_Id = `KEY_${KEY}`,
+			    li_Class = "uObject",
+			    padre = document.getElementById('uProps'),
+			    texto = KEY;
+			const uObject1 = new CrearUL(li_Id, li_Class, padre, texto);
+			uObject1.new_Ul();
+			for (const $KEY in json){ 
+						$json = objJson[rangeValue][KEY][$KEY];		
+						if (typeof $json === 'object'){
+							let {lat, lng} = $json; 
+							$json = `lat: ${lat}; lng: ${lng}`;}
+							let texto = `${$KEY} : ${$json}`,
+							    li_Id = `$KEY_${$KEY}`,
+							    li_Class = "liObject",
+							    padre = document.getElementById(`KEY_${KEY}`);
+							const LiObject2 = new CrearLi(li_Id, li_Class, padre, texto);
+							LiObject2.new_li();
+									};};}
+
+	let user = parseInt(rangeValue)+1
+	document.getElementById('selector').innerHTML = user; 
+	keyFilter(rangeValue)};
+
+
+
+function keyFilter(rangeValue){
+	this.rangeValue = rangeValue;
+	llaves: for (const KEY in objJson[rangeValue]){
+		json = objJson[rangeValue][KEY]; 
+		 if (typeof json != 'object'){
+			let texto = KEY,
+			   li_Id = `li_${KEY}`,
+			   li_Class = "",
+			   padre = document.getElementById('check_holder');
+			   const LiObject3 = new CrearLi(li_Id, li_Class, padre, texto);
+			   LiObject3.new_li();
+				
+			let chk_type = "checkbox",
+    			    chk_Id = KEY, 
+  			    chk_value = KEY,
+			    chk_attr = "onchange",
+			    chk_attr_value = "filterKey(rangeValue, this.value)",
+			    chk_parent = `li_${KEY}`;
+			const ChkObject1 = new CrearInput(chk_type, chk_Id, chk_value, chk_attr, chk_attr_value, chk_parent);
+			ChkObject1.new_input();
+
+		continue llaves;}
+		else{ 
+			let li_Id = `ul_${KEY}`,
+			    li_Class = "",
+			    padre = document.getElementById('check_holder');//
+			    texto = KEY;
+			const uObject2 = new CrearUL(li_Id, li_Class, padre, texto);
+			uObject2.new_Ul();
+			let chk_type = "checkbox",
+    			    chk_Id = `chk_${KEY}`,
+  			    chk_value = KEY;
+			    chk_attr = "onchange",
+			    chk_attr_value = "menu (this.parentElement.id, this.value, this.id)",
+			    chk_parent = `ul_${KEY}`;
+			const ChkObject2 = new CrearInput(chk_type, chk_Id, chk_value, chk_attr, chk_attr_value, chk_parent);
+			ChkObject2.new_input();
+
+			
+			for (const $KEY in json){ 
+				$json = objJson[rangeValue][KEY][$KEY];				
+							let texto = $KEY
+							    li_Id = `${KEY}_${$KEY}`,
+							    li_Class = KEY,
+							    padre = document.getElementById(`ul_${KEY}`);
+							const LiObject4 = new CrearLi(li_Id, li_Class, padre, texto);
+							LiObject4.new_li();
+							
+								let chk_type = "checkbox",
+    								    chk_Id = $KEY, 
+  								    chk_value = KEY,
+								    chk_attr = "onchange",
+								    chk_attr_value = "filterKey(rangeValue, this.value, this.id)",
+								    chk_parent = `${KEY}_${$KEY}`;
+						const ChkObject3 = new CrearInput(chk_type, chk_Id, chk_value, chk_attr, chk_attr_value, chk_parent);
+						ChkObject3.new_input();
+									};};}
+}
+	
+function menu(idFather, clase, chkId){ 
+	let padre = document.getElementById(idFather);
+	let uChildrens =  padre.getElementsByTagName('li');
+	let checkB = document.getElementById(chkId);
+
+	Array.from(uChildrens).forEach( function (element){ 
+		element.classList.toggle(clase);})
+	
+if (checkB.checked == false){	
+		Array.from(uChildrens).forEach( function (element){ 
+			let keyChk = element.lastChild;
+			let trDel = `tr_${keyChk.id}`
+			if (document.getElementById(trDel)){
+				document.getElementById(trDel).remove(); keyChk.checked = false} 
+				})	//cierre forEach							
+					}// cierre if (checkB.checked == false)
+						}// cierre funcion menu
+	
+function filterKey(...args){
+let i = 0;
+let key = [];
+
+for(const KEYS of args)
+	{key[i]=KEYS; i++};
+
+if (args.length == 3) {
+	$json = objJson [key[0]][key[1]][key[2]]; 
+	if(key[2] == "geo"){
+		var {lat, lng} = $json;
+		$json = `lat: ${lat}; lng: ${lng}`;}
+	var chk_id = key[2];}
+else {
+	$json = objJson [key[0]][key[1]];
+	var chk_id = key[1];}
+	
+while (uProps.hasChildNodes()) {uProps.removeChild(uProps.firstChild)}// borra la lista en pantalla
+var chk = document.getElementById(chk_id); //aloja en la variable el elemento HTML input checkbox
+
+if (chk.checked == true){ 
+	let tr = document.createElement("tr"); //crea 1ra fila
+	tr.setAttribute("id",`tr_${chk_id}`); // asigna id a la fila 
+	var fila = data_table.appendChild(tr);// inserta la 1ra fila a la tabla
+	args.push($json);
+	args.forEach( function (element, index){
+			if (index > 0){
+				let td = document.createElement("td");
+				let td_dat = fila.appendChild(td);
+				td_dat.innerHTML = element;
+				if (element == "geo"){ 
+							let td = document.createElement("td");
+							td.setAttribute("id","mapa");
+							fila.appendChild(td);
+							goMap(lat, lng)};
+					}//cierre if index
+						}//cierre funcion anonima en forEach
+			)//cierre forEach
+					 }//cierre if chk.checked	
+
+			 else {remove_tr(`tr_${chk_id}`);}
+	} //cierre de filterKey()	
+
+
+function remove_tr(element) {
+
+document.getElementById(element).remove();}		
+	
+function goMap(latitud, longitud){ 		
+
+								
+				$("#mapa").goMap({
+					latitude:latitud,
+					longitude:longitud,
+					zoom:17,
+					maptype:"SATELLITE",
+					scaleControl:true,	
+							});
+				}
+class CrearInput {
+	constructor (input_type, input_Id, input_value, input_attr, input_attr_value, input_parent) {
+		this.input_type = input_type;	
+		this.input_Id = input_Id; 
+		this.input_value = input_value;
+		this.input_attr = input_attr; 
+		this.input_attr_value = input_attr_value;
+		this.input_parent = input_parent}
+	new_input () { 
+		let NewInput = document.createElement('input');
+		NewInput.type = this.input_type;
+		NewInput.id = this.input_Id; 
+  		NewInput.value = this.input_value;
+		NewInput.setAttribute(this.input_attr, this.input_attr_value);
+		document.getElementById(this.input_parent).appendChild(NewInput);}
+			}
+
+class CrearLi {
+	constructor (li_Id, li_Class, padre, texto) {
+		this.li_Id = li_Id;
+		this.li_Class = li_Class;
+		this.padre = padre;
+		this.texto = texto;
+		this.adicional = null}
+	new_li () { 
+		let nueva_li = document.createElement('li');
+		nueva_li.setAttribute("id", this.li_Id);
+		nueva_li.setAttribute("class", this.li_Class);
+		this.padre.appendChild(nueva_li);
+		nueva_li.innerHTML = this.texto;}
+			}
+
+class CrearUL extends CrearLi {
+	new_Ul () { 	
+		let nueva_ul = document.createElement('ul');
+		nueva_ul.setAttribute("id", this.li_Id);
+		nueva_ul.setAttribute("class", this.li_Class);
+		this.padre.appendChild(nueva_ul);
+		nueva_ul.innerHTML = this.texto;}
+		}
+
+
+function removeAllChildNodes(parent1, parent2) {
+	while (parent1.hasChildNodes()) {parent1.removeChild(parent1.firstChild)};
+	while (parent2.hasChildNodes()) {parent2.removeChild(parent2.firstChild)};
+	while (uProps.hasChildNodes()) {uProps.removeChild(uProps.firstChild)};
+	sub_key= false;
+						}
+</script>
+
+
+
+<head/>
+<body>
+	<header>
+		<h1>JSONPlaceholder comes with a set of 6 common resources:<h1>
+		<nav class="header-menu">
+			<ul id="vinculos">
+				<li><a href="https://jsonplaceholder.typicode.com/posts">/posts	100 posts</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/comments">/comments	500 comments</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/albums">albums	100 albums</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/photos">/photos	5000 photos</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/todos">/todos	200 todos</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/users">/users	10 users</a></li>
+			</ul>
+		</nav>
+	</header>
+
+	<aside id="menu_lateral">
+		<table border="0">
+			<tr>
+				<td id="table_title" colspan="3" align="center"></td>
+			</tr>
+			<tr>
+				<td id="min"></td>
+				<td id="range_holder"></td>
+				<td id="max"></td>
+			</tr>
+			<tr>
+				<td id="selector" colspan="3" align="center"></td>
+			</tr>
+		</table>
+		<div>
+			<ul id="check_holder">
+			</ul>
+		</div>
+	</aside>
+
+	<section id="contenedor"> </section>
+	
+	<article id="desContr"><ul id="uProps"></ul></article>
+	
+	<article>	
+		<table id="data_table" border="1">
+		</table>
+	</article>
+	<footer>
+		<small>
+			WebMaster: Martin Kremis
+		<adress>
+ 			e-mail: martinkremis@hotmail.com
+		</adress>
+		</small>
+	</footer>
+
+</body>
+</html>
+

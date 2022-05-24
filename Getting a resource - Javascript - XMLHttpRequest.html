@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!doctype html>
+	<html lang="es">
+	<meta charset="UTF-8">
+		<title>Prueba con Ajax</title>
+<style>
+
+body{background-color:black; color:green;}
+header h1{text-align:center;}
+.header-menu h1{text-align:center}
+.header-menu {justify-content: flex-end;height: 60px; font-size:20px;}
+.header-menu ul li {display: inline-block; padding: 0 10px; list-style: none;}
+aside {height:1080px;float:left; flex: 0.4; padding:0px 20px 0px 0px;border-left: 1px solid #fff;}
+a:visited {color: blue;}
+ul {list-style: none;}
+a:hover{background-color:green;}
+#menu_lateral a{text-decoration-line:none; font-weight:bold;}
+section{color:white}
+
+
+</style>
+
+<script>
+
+
+
+window.onload=function() {
+	
+var link= document.querySelectorAll("a");
+conteiner= document.getElementById("contenedor")
+div1= document.getElementById("div1")
+	
+        link.forEach(element=> element.onclick= function(event){event.preventDefault();
+				var url=event.target; 
+				const requestURL =(url);
+				const request = new XMLHttpRequest();
+				request.open('GET', requestURL);
+				request.responseType = 'json';
+				request.send();
+				request.onload = function() {
+								const respuesta = request.response; 
+								showrespuesta(respuesta); }
+				function showrespuesta(data) {
+								objJson = data; 
+								objJson_string=JSON.stringify(data); 
+								conteiner.innerHTML = objJson_string; 
+								idFilter(data);};
+
+								}//cierre funcion anonima onclick
+			)// cierre forEach Link						
+		}// cierre onload function
+		
+
+		
+			function idFilter(data){
+						var maximo= data.length-1; 
+						document.getElementById("range_holder").innerHTML ="<input type='range' onchange='idRange(this.value)' value='0' min='0' max="+maximo+">";
+					        document.getElementById('min').innerHTML ="0";
+						document.getElementById('max').innerHTML =maximo+1;}
+
+				function idRange(rangeValue){
+								var i=rangeValue; 
+								objJson_string_id=JSON.stringify(objJson[i]); 
+								conteiner.innerHTML = objJson_string_id; 
+								var x= parseInt(i); 
+								document.getElementById('selection').innerHTML= x+1; 
+								keyFilter(rangeValue)};
+
+					function keyFilter(rangeValue){
+									idSelected=rangeValue; 
+									getKeys= Object.keys(objJson[idSelected]);
+									for (var n=0; n<getKeys.length; n++){
+										var li = document.createElement("li");
+										var list=document.getElementById('check_holder').appendChild(li);
+										list.innerHTML="<label for="+getKeys[n]+">"+getKeys[n]+"<input 												type='checkbox' class='checkboxs' value="+getKeys[n]+" id="+getKeys[n]+" onchange='filterKey(this.value)'>";};}
+
+						function filterKey(chkSel){var keySelected = chkSel; 
+									var selection = objJson[idSelected][keySelected];
+									var box= document.getElementById(keySelected);
+									if (box.checked == true)
+							   		{var li2 = document.createElement("li");
+									let newId = 'chk_'+keySelected;
+									li2.setAttribute("id",newId);
+									li2.setAttribute("class","keySel");																var list2=document.getElementById('uList').appendChild(li2);
+								        list2.innerHTML="<b>"+keySelected+":</b>&nbsp;<i>"+selection+"</i>";}
+									else
+										{idDel= 'chk_'+keySelected;
+										var toDelete=document.getElementById(idDel);
+										toDelete.remove();}
+									
+
+}
+
+
+				
+</script>
+
+
+
+<head/>
+<body>
+	<header>
+		<h1>JSONPlaceholder comes with a set of 6 common resources:<h1>
+		<nav class="header-menu">
+			<ul id="vinculos">
+				<li><a href="https://jsonplaceholder.typicode.com/posts">/posts	100 posts</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/comments">/comments	500 comments</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/albums">albums	100 albums</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/photos">/photos	5000 photos</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/todos">/todos	200 todos</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/users">/users	10 users</a></li>
+			</ul>
+		</nav>
+	</header>
+
+	<aside id="menu_lateral">
+<table border="0">
+<tr>
+<td id="min"></td>
+<td id="range_holder"></td>
+<td id="max"></td>
+</tr>
+<tr>
+<td id="selection"colspan="3" align="center"></td>
+</tr>
+</table>
+<div>
+<ul id="check_holder">
+</ul>
+</div>
+
+	</aside>
+
+<section id="contenedor"></section>
+<div >
+<ul id="uList">
+</ul>
+</div>
+
+
+</body>
+</html>
+

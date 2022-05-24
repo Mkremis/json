@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!doctype html>
+	<html lang="es">
+	<meta charset="UTF-8">
+		<title>Prueba con Ajax</title>
+<style>
+
+body{background-color:black; color:green;}
+header h1{text-align:center;}
+.header-menu h1{text-align:center}
+.header-menu {justify-content: flex-end;height: 60px; font-size:20px;}
+.header-menu ul li {display: inline-block; padding: 0 10px; list-style: none;}
+aside {height:1080px;float:left; flex: 0.4; padding:0px 20px 0px 0px;border-left: 1px solid #fff;}
+a:visited {color: blue;}
+ul {list-style: none;}
+a:hover{background-color:green;}
+#menu_lateral a{text-decoration-line:none; font-weight:bold;}
+section{color:white}
+footer{clear:both; text-align:center; font:Verdana,Geneva,sans-serif}
+.address{color: blue;}
+.company{color: blue;}
+#mapa1{height:300px; width:300px;}
+
+</style>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://maps.google.com/maps/api/js?key=#API_KEY#"></script> 
+<script type="text/javascript" src="jquery.gomap-1.3.3.min.js"></script> 
+
+<script>
+
+window.onload=function() {
+	
+
+var idSelected;
+div1 = document.getElementById("div1")
+uKeyList = document.getElementById('check_holder')
+data_table = document.getElementById('data_table')
+var sub_key = false
+var pasador
+const mapa = document.getElementById("mapa")
+	
+document.querySelectorAll("a").forEach(element=> element.onclick= function(event){event.preventDefault();			//forEach link, desactiva propiedad por defecto	
+	let url=event.target; 							//define el target de los links
+	fetch(url)								// funcion fetch()
+	.then(response=> response.json())
+	.then(data=> {
+	objJson = data;
+	let objJson_string = JSON.stringify(data); 			//convierte el objeto Json en string
+	if (uKeyList.hasChildNodes()||data_table.hasChildNodes()){removeAllChildNodes(uKeyList, data_table)}//llama a funcion para eliminar li y tablas
+	document.getElementById("contenedor").innerHTML = objJson_string; //muestra en pantalla el objeto Json string
+	userFilter(data);})					//llama al filtro por usuarios y le pasa parametro
+
+								}//cierre funcion anonima onclick
+			)// cierre forEach Link						
+		}// cierre onload function
+		
+function userFilter(data){  //inserta el input range para seleccionar el usuario
+	let maximo = data.length-1; //establece el maximo de elementos del array ajustado por posicion inicial=0
+	document.getElementById("table_title").innerHTML ="<b>Select User:</b>";//titulo del range selector
+	document.getElementById('selector').innerHTML = "1";
+	document.getElementById("range_holder").innerHTML ="<input type='range' onchange='userRange(this.value)' value='0' min='0' max="+maximo+">";
+	document.getElementById('min').innerHTML ="1";
+	document.getElementById('max').innerHTML =maximo+1;}
+	
+
+function userRange(rangeValue){ //llamado desde el evento onchange del input range con el valor seleccionado de atributo
+	if (uKeyList.hasChildNodes()||data_table.hasChildNodes()){  
+		removeAllChildNodes(uKeyList, data_table)}//llama a funcion para eliminar li y tablas
+	
+	document.getElementById("contenedor").innerHTML = JSON.stringify(objJson[rangeValue], null, 3); 
+	let user = parseInt(rangeValue)+1
+	document.getElementById('selector').innerHTML = user; 
+	keyFilter(rangeValue)};
+
+function keyFilter(rangeValue){
+	idSelected = rangeValue;
+	if (sub_key){						//sí el key es un objeto y no tiene tiene sub keys anidados previamente
+		var getKeys = Object.keys(objJson[idSelected][keySelected]);	//obtiene los sub keys del objeto y los almacena en getKeys
+		pasador = keySelected;				//almacena en pasador el key seleccionado para ser usado en filterKey()
+		let newParent = 'li_'+keySelected;		//crea la variable con el nombre list del key seleccionado
+		let father = document.getElementById(newParent);		//almacena el elemento HTML li del key seleccionado (futuro parent)		
+		father.setAttribute("style","color: white");
+		let uL = document.createElement('ul')		//crea elemento HTML ul	
+		father.appendChild(uL);				//convierte al key seleccionado en padre del ul creado anteriormente
+		uKeyList = uL}				//convierte al ul en el nido donde se anidan los sub key list del key seleccionado
+			else {				//sí solo hay seleccionado un numero de usuario
+				getKeys= Object.keys(objJson[idSelected]); //obtiene los keys del usuario seleccionado
+				var uKeyList = document.getElementById('check_holder')}//uKeyList= nido de los elementos HTML list para los keys del usuario
+	
+
+		getKeys.forEach(element =>{ 
+		let li = document.createElement("li");	//crea elemento HTML li para cada key o sub key
+		let listId = 'li_'+element; // crea el id para cada elemento li de cada key o sub key creado previamente
+		li.setAttribute("id",listId);	// asigna el atributo id a cada key o sub key creado
+		if (sub_key){ 	//verifica sí se trata de un sub key
+			li.setAttribute("Class", keySelected);}	//sí es un sub key le asigna la clase con el nombre de su key padre
+		chkList = uKeyList.appendChild(li);// anida el elemento HTML li en el elemento HTML ul y lo aloja en la variable chkList
+		chkList.innerHTML="<label for="+element+">"+element+"<input type='checkbox' class='checkboxs' value="+element+" id="+element+" 			onchange='filterKey(this.value)'>"; //crea elemento HTML input checklist para cada elemento lista de key o subkey seleccionado
+						})//cierra forEach
+				}//cierra funcion keyFilter
+
+function filterKey(chkSel){
+	keySelected = chkSel;	//guarda en la variable keySelected el atributo chkSel que contiene el key o sub key seleccionado
+	var option_chk = keySelected; //guarda en la variable option_chk el key o sub key seleccionado
+	var subKeySelected;	//incializa la variable para los sub key
+	var arrJson = objJson[idSelected][keySelected]; //guarda en arrJson el elemento seleccionado del objeto Json
+	var key_obj= typeof arrJson === 'object';//comprueba si keySelected es un objeto
+	var alreadyClass= document.getElementsByClassName(keySelected); //comprueba si ya hay clases creadas con el nombre del key seleccionado
+	
+		if(key_obj==true && alreadyClass.length==0){//si es un objeto(array) pero NO hay clases creadas previamente con su nombre
+			sub_key= true; //si es un objeto sub_key es verdadero
+			arrJson= Object.entries(arrJson); //guarda en arrJson el array completo que contiene el objeto Json
+			keyFilter(idSelected);}		//llama keyFilter() si keySelected es objeto con el atributo del usuario seleccionado
+			
+			
+		if (arrJson===undefined){ //cuando un sub key fue seleccionado la variable arrJson solo tiene guardado hasta el key seleccionado del array
+			var subKeySelected= keySelected; //el sub key lo trae dentro de la variable del key y el key dentro de la variable pasador
+			keySelected= pasador;// guarda en keySelected la variable pasador que guarda el key cuando hay un sub key seleccionado
+			var arrJson = objJson[idSelected][keySelected][subKeySelected]// guarda en arrJson el array completo hasta sub key
+			
+				if(subKeySelected=="geo"){
+				var coordenadas= Object.entries(arrJson);
+				var latitud= coordenadas[0][1];
+				var longitud= coordenadas[1][1]
+				goMap(latitud, longitud);};
+			var subkey_obj= typeof arrJson === 'object';//comprueba si subKeySelected es un objeto
+			var trClass= 'tr_'+ keySelected;}// asigna el nombre del padre del subkey seleccionado para la clase del elemento HTML table tr
+			else {
+				subKeySelected="";//si no hay sub key seleccionado lo guarda como vacio para que en la tabla quede la celda vacia
+				var trClass= 'tr_keySelected';// asigna el nombre del key seleccionado para la clase del elemento HTML table tr
+				};
+		
+		if(key_obj == true){
+			var arrJson = JSON.stringify(arrJson, null, 0);} //convierte en string el objeto para poder mostrar el array completo 
+		
+		if(subkey_obj == true){
+			var arrJson = JSON.stringify(arrJson, null, 0);} // convierte en string el sub key para poder mostrarlo 
+		
+		
+		var boxKey= document.getElementById(option_chk); //aloja en la variable el elemento HTML input checkbox
+		if (boxKey.checked == true){ //comprueba si el checkbox esta seleccionado
+		
+			
+			
+			var tr = document.createElement("tr"); //crea 1ra fila
+			let newId = 'chk_'+option_chk; //id 1ra fila
+			tr.setAttribute("id",newId); // asigna id a la 1ra fila
+			tr.setAttribute("class",trClass); // asigna id a la 1ra fila
+			var fila=data_table.appendChild(tr);// inserta la 1ra fila a la tabla
+			//encabezado:
+			var th = document.createElement("th"); // crea el encabezado en la primer columna
+			var encabezado= fila.appendChild(th);// inserta el encabezado en la 1ra fila
+			encabezado.innerHTML="<b>"+keySelected+"</b>";// inserta en el encabezado el key seleccionado
+			//1er key:
+			var td1 = document.createElement("td"); // crea el encabezado en la primer columna
+			var tdDatos1= fila.appendChild(td1);// inserta el encabezado en la 1ra fila
+			tdDatos1.innerHTML="<b>"+subKeySelected+"</b>"; // inserta en el encabezado el key seleccionado
+			//2do key:
+			var td2 = document.createElement("td")// crea la segunda columna
+			var tdDatos2= fila.appendChild(td2); // inserta la segunda columna en la 1er fila
+			tdDatos2.innerHTML="<i>"+arrJson+"</i>";// segunda columna con los datos del key seleccionado
+					 }//cierre de if boxkey.checked	
+
+/* si el checkbox esta "unchecked": elimina primero las tablas con los datos de checkbox de-seleccionado y luego borra la lista ul que contiene a los hijos del key de-seleccionado en caso de que los hubiera:*/	
+			     
+			else {  idDel= 'chk_'+option_chk;
+				var trDel=document.getElementById(idDel);
+				trDel.remove();
+				while (mapa.hasChildNodes()) {mapa.removeChild(mapa.firstChild);};
+				if(alreadyClass.length>0){
+					var parent = document.getElementById('li_'+ option_chk);
+					parent.removeChild(parent.lastChild);
+					var classDel= 'tr_'+option_chk;
+					var trArray = document.querySelectorAll('.'+classDel);
+					trArray.forEach(elemento => {
+ 								 elemento.remove();});
+					
+				}}
+				
+	} //cierre de filterKey()	
+
+function removeAllChildNodes(parent1, parent2) {
+	while (parent1.hasChildNodes()) {parent1.removeChild(parent1.firstChild)};
+	while (parent2.hasChildNodes()) {parent2.removeChild(parent2.firstChild);};
+	while (mapa.hasChildNodes()) {mapa.removeChild(mapa.firstChild);};
+	sub_key= false;
+	
+
+									}
+
+
+//goMap
+
+function goMap(latitud, longitud){ 
+				var div_mapa= document.createElement('div');
+				var article= document.getElementById("mapa"); 
+				mapa.appendChild(div_mapa);
+				div_mapa.setAttribute("id","mapa1");
+				
+				
+				$("#mapa1").goMap({
+					latitude:latitud,
+					longitude:longitud,
+					zoom:17,
+					maptype:"SATELLITE",
+					scaleControl:true,	
+							});
+				}
+	
+		
+</script>
+
+
+
+<head/>
+<body>
+	<header>
+		<h1>JSONPlaceholder comes with a set of 6 common resources:<h1>
+		<nav class="header-menu">
+			<ul id="vinculos">
+				<li><a href="https://jsonplaceholder.typicode.com/posts">/posts	100 posts</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/comments">/comments	500 comments</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/albums">albums	100 albums</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/photos">/photos	5000 photos</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/todos">/todos	200 todos</a></li>
+				<li><a href="https://jsonplaceholder.typicode.com/users">/users	10 users</a></li>
+			</ul>
+		</nav>
+	</header>
+
+	<aside id="menu_lateral">
+		<table border="0">
+			<tr>
+				<td id="table_title" colspan="3" align="center"></td>
+			</tr>
+			<tr>
+				<td id="min"></td>
+				<td id="range_holder"></td>
+				<td id="max"></td>
+			</tr>
+			<tr>
+				<td id="selector" colspan="3" align="center"></td>
+			</tr>
+		</table>
+		<div>
+			<ul id="check_holder">
+			</ul>
+		</div>
+	</aside>
+
+
+	<section id="contenedor">
+	</section>
+	
+	<article id='articulo'>	
+		<div >
+			<table id="data_table" border="1">
+			</table>
+		</div>
+		<div id="mapa"></div>
+		
+	</article>
+	
+
+	<footer>
+		<small>
+			WebMaster: Martin Kremis
+		<adress>
+ 			e-mail: martinkremis@hotmail.com
+		</adress>
+		</small>
+	</footer>
+
+</body>
+</html>
+
